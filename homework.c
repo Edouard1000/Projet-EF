@@ -276,7 +276,7 @@ void geoMeshGenerate() {
 
     femGeo* theGeometry = geoGetGeometry();
     
-    gmshOpen("/mnt/c/Users/theom/OneDrive - UCL/BAC3/Q6/Elements Finis/Projet/RailMesh/UIC60_copie2.geo", &ierr); //OUVRE LE FICHIER .GEO
+    gmshOpen("./UIC60_copie2.geo", &ierr); //OUVRE LE FICHIER .GEO
     ErrorGmsh(ierr);
 
     geoSetSizeCallback(geoSize);
