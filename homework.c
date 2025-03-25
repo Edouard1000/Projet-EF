@@ -98,14 +98,10 @@ void femElasticityAssembleElements(femProblem *theProblem) {
 
             for (i = 0; i < theSpace->n; i++) {
                 for (j = 0; j < theSpace->n; j++) {
-                    A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] +
-                                            dphidy[i] * c * dphidy[j]) * jac * weight;
-                    A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] +
-                                            dphidy[i] * c * dphidx[j]) * jac * weight;
-                    A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] +
-                                            dphidx[i] * c * dphidy[j]) * jac * weight;
-                    A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] +
-                                            dphidx[i] * c * dphidx[j]) * jac * weight;
+                    A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * jac * weight;
+                    A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * jac * weight;
+                    A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * jac * weight;
+                    A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * jac * weight;
                 }
                 B[mapY[i]] -= phi[i] * g * rho * jac * weight;
             }
