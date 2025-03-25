@@ -113,7 +113,7 @@ void femElasticityAssembleElements(femProblem *theProblem) {
     }
 
        // Check if the matrix is symmetrical
-    double tolerance = 1e-10; // Set a reasonable tolerance
+    double tolerance = 0; // Set a reasonable tolerance
     for (int i = 0; i < theProblem->system->size; i++) {
         for (int j = i + 1; j < theProblem->system->size; j++) { // Only check upper triangle
             if (fabs(theSystem->A[i][j] - theSystem->A[j][i]) > tolerance) {
