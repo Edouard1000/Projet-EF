@@ -276,7 +276,7 @@ void geoMeshGenerate() {
 
     femGeo* theGeometry = geoGetGeometry();
     
-    gmshOpen("./UIC60_copie2.geo", &ierr); //OUVRE LE FICHIER .GEO
+    gmshOpen("../src/Projet-EF/UIC60_copie2.geo", &ierr); //OUVRE LE FICHIER .GEO
     ErrorGmsh(ierr);
 
     geoSetSizeCallback(geoSize);
