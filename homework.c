@@ -46,7 +46,7 @@ int isSymmetrical(double **matrix, int size, double epsilon) {
     for (int i = 0; i < size; i++) {
         for (int j = i+1; j < size; j++) {  // i+1 : pas besoin de tester la diagonale ni les doublons
             if (fabs(matrix[i][j] - matrix[j][i]) > epsilon) {
-                return -1;
+                return 0;
             }
         }
     }
