@@ -1,9 +1,9 @@
 #include "fem.h"
 #include <math.h>
-#include <stdbool.h>
+#include <stdbool.h>  
 
 
-// === Fonction pour l'interpolation de la taille du maillage (Mesh) ===
+// === Fonction pour l'interpolation de la taille du maillage (GeoMesh) ===
 
 double hermiteInterpolation(double d, double d_star, double h0, double h_star) {
     if (d >= d_star) return h_star;
@@ -54,18 +54,18 @@ int isSymmetrical(double **matrix, int size, double epsilon) {
 }
 
 void femElasticityAssembleElements(femProblem *theProblem) {
-  // Récupération des structures de données
     femFullSystem  *theSystem = theProblem->system;
     femIntegration *theRule = theProblem->rule;
     femDiscrete    *theSpace = theProblem->space;
     femGeo         *theGeometry = theProblem->geometry;
     femNodes       *theNodes = theGeometry->theNodes;
     femMesh        *theMesh = theGeometry->theElements;
-    double x[4],y[4],phi[4],dphidxsi[4],dphideta[4],dphidx[4],dphidy[4];
-    int iElem,iInteg,i,j,map[4],mapX[4],mapY[4];
 
-    // Paramètres du problème
-    int nLocal = theMesh->nLocalNode;
+    // Use arrays of size 3 for triangles
+    double x[3], y[3], phi[3], dphidxsi[3], dphideta[3], dphidx[3], dphidy[3];
+    int iElem, iInteg, i, j, map[3], mapX[3], mapY[3];
+
+    int nLocal = theMesh->nLocalNode; // Should be 3 for triangles
     double a   = theProblem->A;
     double b   = theProblem->B;
     double c   = theProblem->C;
@@ -73,7 +73,6 @@ void femElasticityAssembleElements(femProblem *theProblem) {
     double g   = theProblem->g;
     double **A = theSystem->A;
     double *B  = theSystem->B;
-
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++) {
         for (j=0; j < nLocal; j++) {
@@ -84,22 +83,24 @@ void femElasticityAssembleElements(femProblem *theProblem) {
             y[j]    = theNodes->Y[map[j]];
         }
 
-        for (iInteg=0; iInteg < theRule->n; iInteg++) {
+        for (iInteg = 0; iInteg < theRule->n; iInteg++) {
             double xsi    = theRule->xsi[iInteg];
             double eta    = theRule->eta[iInteg];
             double weight = theRule->weight[iInteg];
-            femDiscretePhi2(theSpace,xsi,eta,phi);
-            femDiscreteDphi2(theSpace,xsi,eta,dphidxsi,dphideta);
+
+            // Use femDiscretePhi2 and femDiscreteDphi2
+            femDiscretePhi2(theSpace, xsi, eta, phi);
+            femDiscreteDphi2(theSpace, xsi, eta, dphidxsi, dphideta);
 
             double dxdxsi = 0.0;
             double dxdeta = 0.0;
             double dydxsi = 0.0;
             double dydeta = 0.0;
             for (i = 0; i < theSpace->n; i++) {
-                dxdxsi += x[i]*dphidxsi[i];
-                dxdeta += x[i]*dphideta[i];
-                dydxsi += y[i]*dphidxsi[i];
-                dydeta += y[i]*dphideta[i];
+                dxdxsi += x[i] * dphidxsi[i];
+                dxdeta += x[i] * dphideta[i];
+                dydxsi += y[i] * dphidxsi[i];
+                dydeta += y[i] * dphideta[i];
             }
             double jac = fabs(dxdxsi * dydeta - dxdeta * dydxsi);
 
@@ -107,18 +108,15 @@ void femElasticityAssembleElements(femProblem *theProblem) {
                 dphidx[i] = (dphidxsi[i] * dydeta - dphideta[i] * dydxsi) / jac;
                 dphidy[i] = (dphideta[i] * dxdxsi - dphidxsi[i] * dxdeta) / jac;
             }
+
             for (i = 0; i < theSpace->n; i++) {
-                for(j = 0; j < theSpace->n; j++) {
-                    A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] +
-                                            dphidy[i] * c * dphidy[j]) * jac * weight;
-                    A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] +
-                                            dphidy[i] * c * dphidx[j]) * jac * weight;
-                    A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] +
-                                            dphidx[i] * c * dphidy[j]) * jac * weight;
-                    A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] +
-                                            dphidx[i] * c * dphidx[j]) * jac * weight;
+                for (j = 0; j < theSpace->n; j++) {
+                    A[mapX[i]][mapX[j]] += (dphidx[i] * a * dphidx[j] + dphidy[i] * c * dphidy[j]) * jac * weight;
+                    A[mapX[i]][mapY[j]] += (dphidx[i] * b * dphidy[j] + dphidy[i] * c * dphidx[j]) * jac * weight;
+                    A[mapY[i]][mapX[j]] += (dphidy[i] * b * dphidx[j] + dphidx[i] * c * dphidy[j]) * jac * weight;
+                    A[mapY[i]][mapY[j]] += (dphidy[i] * a * dphidy[j] + dphidx[i] * c * dphidx[j]) * jac * weight;
                 }
-                B[mapY[i]] -= phi[i] * g * rho * jac * weight; // Ajout du terme source
+                B[mapY[i]] -= phi[i] * g * rho * jac * weight;
             }
         }
     }
@@ -269,23 +267,19 @@ double *femElasticityForces(femProblem *theProblem) {
     return residuals;
 }
 
-
-
 void geoMeshGenerate() {
     int ierr;
 
     femGeo* theGeometry = geoGetGeometry();
-    
-    gmshOpen("../Projet-EF/UIC60_copie2.geo", &ierr); //OUVRE LE FICHIER .GEO
+
+    // Adapt path as needed. Use absolute path for clarity.
+    gmshOpen("../Projet-EF/UIC60_copie2.geo", &ierr);
     ErrorGmsh(ierr);
 
     geoSetSizeCallback(geoSize);
 
-    gmshModelOccSynchronize(&ierr); //SYNCHRONISE LE MODÈLE
+    gmshModelOccSynchronize(&ierr);
 
-    // Option pour que Gmsh sauvegarde *tous* les éléments (pas seulement ceux avec des propriétés physiques)
     gmshOptionSetNumber("Mesh.SaveAll", 1, &ierr);
-
-     // Générer le maillage 2D
     gmshModelMeshGenerate(2, &ierr);
 }
