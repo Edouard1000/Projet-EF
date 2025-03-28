@@ -42,15 +42,15 @@ double geoSize(double x, double y){
 
 
 // Function to check if a matrix is symmetrical
-bool isSymmetrical(double **matrix, int size) {
+int isSymmetrical(double **matrix, int size, double epsilon) {
     for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            if (matrix[i][j] != matrix[j][i]) {
-                return false;
+        for (int j = i+1; j < size; j++) {  // i+1 : pas besoin de tester la diagonale ni les doublons
+            if (fabs(matrix[i][j] - matrix[j][i]) > epsilon) {
+                return -1;
             }
         }
     }
-    return true;
+    return 1;
 }
 
 void femElasticityAssembleElements(femProblem *theProblem) {
@@ -77,7 +77,7 @@ void femElasticityAssembleElements(femProblem *theProblem) {
 
     for (iElem = 0; iElem < theMesh->nElem; iElem++) {
         for (j=0; j < nLocal; j++) {
-            map[j]  = theMesh->elem[iElem*nLocal+j];
+            map[j]  = theMesh->elem[iElem*nLocal+j]; //{3, 8, 4}, map[0]=3, map[1]=8, map[2]=4.
             mapX[j] = 2*map[j];
             mapY[j] = 2*map[j] + 1;
             x[j]    = theNodes->X[map[j]];
@@ -124,7 +124,7 @@ void femElasticityAssembleElements(femProblem *theProblem) {
     }
 
     // Check if the matrix is symmetrical
-    if (isSymmetrical(theProblem->system->A, theProblem->system->size)) {
+    if (isSymmetrical(theProblem->system->A, theProblem->system->size, 1e-8)) {
         printf("The matrix is symmetrical.\n");
     } else {
         printf("The matrix is not symmetrical.\n");
