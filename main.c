@@ -17,7 +17,7 @@ int main(void) {
     geoInitialize();
     femGeo* theGeometry = geoGetGeometry();
 
-    theGeometry->h = 3;
+    theGeometry->h = 3*10;
     theGeometry->elementType = FEM_TRIANGLE;
     
     geoMeshGenerate(); // Génère le maillage avec Gmsh
@@ -62,7 +62,75 @@ int main(void) {
 
 
     geoMeshWrite("../data/elasticity.txt"); // Optionnel: Sauvegarde du maillage
+ //
+ //  -3- Champ de la taille de r�f�rence du maillage
+ //
 
+    double *meshSizeField = malloc(theGeometry->theNodes->nNodes*sizeof(double));
+    femNodes *theNodes = theGeometry->theNodes;
+    for(int i=0; i < theNodes->nNodes; ++i)
+        meshSizeField[i] = geoSize(theNodes->X[i], theNodes->Y[i]);
+ //
+ //  -4- Visualisation du maillage
+ //  
+     
+    int mode = 1; // Change mode by pressing "j", "k", "l"
+    int domain = 0;
+    int freezingButton = FALSE;
+    double t, told = 0;
+    char theMessage[256];
+    double pos[2] = {20,460};
+
+
+    GLFWwindow* window = glfemInit("EPL1110 : Mesh generation ");
+    glfwMakeContextCurrent(window);
+
+    do {
+        int w,h;
+
+
+        glfwGetFramebufferSize(window,&w,&h);
+        glfemReshapeWindows(theGeometry->theNodes,w,h);
+
+        t = glfwGetTime();  
+    //    glfemChangeState(&mode, theMeshes->nMesh);
+        if (glfwGetKey(window,'D') == GLFW_PRESS) { mode = 0;}
+        if (glfwGetKey(window,'V') == GLFW_PRESS) { mode = 1;}
+        if (glfwGetKey(window,'N') == GLFW_PRESS && freezingButton == FALSE) { domain++; freezingButton = TRUE; told = t;}
+
+        
+        if (t-told > 0.5) {freezingButton = FALSE; }
+            
+        
+        
+        
+        if (mode == 1) {
+            glfemPlotField(theGeometry->theElements, meshSizeField);
+            glfemPlotMesh(theGeometry->theElements); 
+            sprintf(theMessage, "Number of elements : %d ",theGeometry->theElements->nElem);
+
+            
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+
+            
+            
+            }
+        if (mode == 0) {
+            domain = domain % theGeometry->nDomains;
+            glfemPlotDomain( theGeometry->theDomains[domain]); 
+            
+            
+            
+            sprintf(theMessage, "%s : %d ",theGeometry->theDomains[domain]->name,domain);
+
+            
+            glColor3f(1.0,0.0,0.0); glfemMessage(theMessage);
+            }
+            
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    } while( glfwGetKey(window,GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+            glfwWindowShouldClose(window) != 1 );
 
     // Paramètres du problème d'élasticité
     double E   = 211e9;     // Module de Young
@@ -73,7 +141,7 @@ int main(void) {
 
     // Création du problème
     femProblem* theProblem = femElasticityCreate(theGeometry, E, nu, rho, g, PLANAR_STRAIN);
-
+    printf("femProblem size : %d \n",theProblem->system->size);
     // Ajout des conditions aux limites (Dirichlet et Neumann)
 
     // Add boundary conditions for Bottom domains
@@ -125,7 +193,7 @@ int main(void) {
     double area = femElasticityIntegrate(theProblem, fun);
 
     // Facteur d'amplification pour la visualisation des déplacements
-    femNodes *theNodes = theGeometry->theNodes;
+    //femNodes *theNodes = theGeometry->theNodes;
     double deformationFactor = 1e4; // A ajuster selon votre géométrie/déplacements
 
     // Allocation de mémoire pour les champs à afficher
@@ -164,74 +232,74 @@ int main(void) {
     printf(" ==== Weight                        : %14.7e [N] \n", area * rho * g);
 
      // Initialisation de la fenêtre GLFW
-    GLFWwindow* window = glfemInit("EPL1110 : Linear Elasticity");
-    glfwMakeContextCurrent(window);
+    // GLFWwindow* window = glfemInit("EPL1110 : Linear Elasticity");
+    // glfwMakeContextCurrent(window);
 
-    int mode = 1; // Mode d'affichage
-    int domain = 0; // Domaine courant
-    int freezingButton = FALSE;
-    double t, told = 0;
-    char theMessage[256];
+    // int mode = 1; // Mode d'affichage
+    // int domain = 0; // Domaine courant
+    // int freezingButton = FALSE;
+    // double t, told = 0;
+    // char theMessage[256];
 
-    // Boucle principale de l'application (boucle d'événements)
-    do {
-        int w, h;
-        glfwGetFramebufferSize(window, &w, &h); // Récupère la taille de la fenêtre
-        glfemReshapeWindows(theGeometry->theNodes, w, h); // Adapte la vue
+    // // Boucle principale de l'application (boucle d'événements)
+    // do {
+    //     int w, h;
+    //     glfwGetFramebufferSize(window, &w, &h); // Récupère la taille de la fenêtre
+    //     glfemReshapeWindows(theGeometry->theNodes, w, h); // Adapte la vue
 
-        t = glfwGetTime(); // Temps courant pour les animations
+    //     t = glfwGetTime(); // Temps courant pour les animations
 
-        // Gestion des touches du clavier pour changer le mode d'affichage
-        if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
-        if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
-        if (glfwGetKey(window, 'X') == GLFW_PRESS) { mode = 2; }
-        if (glfwGetKey(window, 'Y') == GLFW_PRESS) { mode = 3; }
-        if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE) {
-            domain++;
-            freezingButton = TRUE;
-            told = t;
-        }
-        if (t - told > 0.5) {
-            freezingButton = FALSE;
-        }
+    //     // Gestion des touches du clavier pour changer le mode d'affichage
+    //     if (glfwGetKey(window, 'D') == GLFW_PRESS) { mode = 0; }
+    //     if (glfwGetKey(window, 'V') == GLFW_PRESS) { mode = 1; }
+    //     if (glfwGetKey(window, 'X') == GLFW_PRESS) { mode = 2; }
+    //     if (glfwGetKey(window, 'Y') == GLFW_PRESS) { mode = 3; }
+    //     if (glfwGetKey(window, 'N') == GLFW_PRESS && freezingButton == FALSE) {
+    //         domain++;
+    //         freezingButton = TRUE;
+    //         told = t;
+    //     }
+    //     if (t - told > 0.5) {
+    //         freezingButton = FALSE;
+    //     }
 
-         // Affichage en fonction du mode
-        if (mode == 0) {
-            domain = domain % theGeometry->nDomains;  // Cycle sur les domaines
-            glfemPlotDomain(theGeometry->theDomains[domain]);  // Affiche le domaine courant
-            sprintf(theMessage, "%s : %d ", theGeometry->theDomains[domain]->name, domain);
-            glColor3f(1.0, 0.0, 0.0);
-            glfemMessage(theMessage); // Affiche le nom du domaine
-        }
-        if (mode == 1) {
-             // Affiche le champ de déplacement et le maillage déformé
-            glfemPlotField(theGeometry->theElements, normDisplacement);
-            glfemPlotMesh(theGeometry->theElements);
-            sprintf(theMessage, "Number of elements : %d ", theGeometry->theElements->nElem);
-            glColor3f(1.0, 0.0, 0.0);
-            glfemMessage(theMessage);  // Affiche le nombre d'éléments
-        }
-        if (mode == 2) {
-             // Affiche les forces résiduelles horizontales et le maillage
-            glfemPlotField(theGeometry->theElements, forcesX);
-            glfemPlotMesh(theGeometry->theElements);
-            sprintf(theMessage, "Number of elements : %d ", theGeometry->theElements->nElem);
-            glColor3f(1.0, 0.0, 0.0);
-            glfemMessage(theMessage); // Affiche le nombre d'éléments
-        }
-        if (mode == 3) {
-            // Affiche les forces résiduelles verticales et le maillage
-            glfemPlotField(theGeometry->theElements, forcesY);
-            glfemPlotMesh(theGeometry->theElements);
-            sprintf(theMessage, "Number of elements : %d ", theGeometry->theElements->nElem);
-            glColor3f(1.0, 0.0, 0.0);
-            glfemMessage(theMessage);  // Affiche le nombre d'éléments
-        }
-        glfwSwapBuffers(window); // Swap des buffers (double buffering)
-        glfwPollEvents();       // Traite les événements (clavier, souris, etc.)
+    //      // Affichage en fonction du mode
+    //     if (mode == 0) {
+    //         domain = domain % theGeometry->nDomains;  // Cycle sur les domaines
+    //         glfemPlotDomain(theGeometry->theDomains[domain]);  // Affiche le domaine courant
+    //         sprintf(theMessage, "%s : %d ", theGeometry->theDomains[domain]->name, domain);
+    //         glColor3f(1.0, 0.0, 0.0);
+    //         glfemMessage(theMessage); // Affiche le nom du domaine
+    //     }
+    //     if (mode == 1) {
+    //          // Affiche le champ de déplacement et le maillage déformé
+    //         glfemPlotField(theGeometry->theElements, normDisplacement);
+    //         glfemPlotMesh(theGeometry->theElements);
+    //         sprintf(theMessage, "Number of elements : %d ", theGeometry->theElements->nElem);
+    //         glColor3f(1.0, 0.0, 0.0);
+    //         glfemMessage(theMessage);  // Affiche le nombre d'éléments
+    //     }
+    //     if (mode == 2) {
+    //          // Affiche les forces résiduelles horizontales et le maillage
+    //         glfemPlotField(theGeometry->theElements, forcesX);
+    //         glfemPlotMesh(theGeometry->theElements);
+    //         sprintf(theMessage, "Number of elements : %d ", theGeometry->theElements->nElem);
+    //         glColor3f(1.0, 0.0, 0.0);
+    //         glfemMessage(theMessage); // Affiche le nombre d'éléments
+    //     }
+    //     if (mode == 3) {
+    //         // Affiche les forces résiduelles verticales et le maillage
+    //         glfemPlotField(theGeometry->theElements, forcesY);
+    //         glfemPlotMesh(theGeometry->theElements);
+    //         sprintf(theMessage, "Number of elements : %d ", theGeometry->theElements->nElem);
+    //         glColor3f(1.0, 0.0, 0.0);
+    //         glfemMessage(theMessage);  // Affiche le nombre d'éléments
+    //     }
+    //     glfwSwapBuffers(window); // Swap des buffers (double buffering)
+    //     glfwPollEvents();       // Traite les événements (clavier, souris, etc.)
 
-    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-             glfwWindowShouldClose(window) != 1);
+    // } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
+    //          glfwWindowShouldClose(window) != 1);
 
     // Libération de la mémoire (très important !)
     free(normDisplacement);

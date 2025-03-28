@@ -13,28 +13,39 @@ double hermiteInterpolation(double d, double d_star, double h0, double h_star) {
 
 double geoSize(double x, double y){
     femGeo* theGeometry = geoGetGeometry();
+    
     double h = theGeometry->h;
-
-    // Trouver le sommet du rail et points intermédiaires
-    static double yTop, X1, Y1, X2, Y2;
+    
+    // Trouver le sommet du rail
+    static double yTop, X1, X2, X3,Y3, X4;
     yTop = 172;
     X1 = 37.85;
-    Y1 = 157.7;
     X2 = -X1;
-    Y2 = Y1;
-
-    // Calcul des distances
+    X3 = 33.8;
+    Y3 = 164.3;
+    X4 = -X3;
+    // Calcul de la distance au sommet local
     double dTop = fabs(yTop - y);
-    double d1 = sqrt((x - X1) * (x - X1) + (y - Y1) * (y - Y1));
-    double d2 = sqrt((x - X2) * (x - X2) + (y - Y2) * (y - Y2));
+    double d1 = fabs(X1 - x);
+    double d2 = fabs(X2 - x);
+    double d3 = sqrt((X3 - x)*(X3 - x) + (Y3 - y)*(Y3 - y));
+    double d4 = sqrt((X4 - x)*(X4 - x) + (Y3 - y)*(Y3 - y));
 
-    // Tailles de mailles plus fines
+    // Définir une taille de maille plus fine en haut
     double hTop = h * 0.1;
-    double hUpper = hermiteInterpolation(dTop, 35, hTop, h);
-    double hPoint1 = hermiteInterpolation(d1, 25, hTop, h);
-    double hPoint2 = hermiteInterpolation(d2, 25, hTop, h);
 
-    return fmin(fmin(hUpper, hPoint1), hPoint2); // Retourne la plus petite taille
+    if (y > 121) {
+        double hUpper = hermiteInterpolation(dTop, 35, hTop, h);
+        double hPoint1 = hermiteInterpolation(d1, 35, hTop, h);
+        double hPoint2 = hermiteInterpolation(d2, 35, hTop, h);
+        double hPoint3 = hermiteInterpolation(d3, 45, hTop, h);
+        double hPoint4 = hermiteInterpolation(d4, 45, hTop, h);
+        //return fmin(hUpper, fmin(hPoint1, fmin(hPoint2, fmin(hPoint3, hPoint4))));
+        return 30*5;
+    }
+    
+    //return h;
+    return 30*5;
 }
 
 
@@ -52,7 +63,29 @@ int isSymmetrical(double **matrix, int size, double epsilon) {
     }
     return 1;
 }
+void printMatrixClean(double **A, int size, int maxDisplay, double epsilon) {
+    printf("Affichage de la matrice A [%d x %d] (max : %d x %d)\n", size, size, maxDisplay, maxDisplay);
+    printf("======================================================\n");
 
+    int limit = (size < maxDisplay) ? size : maxDisplay;
+
+    for (int i = 0; i < limit; i++) {
+        for (int j = 0; j < limit; j++) {
+            if (fabs(A[i][j]) > epsilon) {
+                printf("%10.2e ", A[i][j]);  // valeur non nulle
+            } else {
+                printf("           ");       // 11 espaces pour aligner proprement
+            }
+        }
+        printf("\n");
+    }
+
+    if (size > maxDisplay) {
+        printf("... (seulement les %d premières lignes/colonnes affichées)\n", maxDisplay);
+    }
+
+    printf("======================================================\n\n");
+}
 void femElasticityAssembleElements(femProblem *theProblem) {
     femFullSystem  *theSystem = theProblem->system;
     femIntegration *theRule = theProblem->rule;
@@ -73,7 +106,7 @@ void femElasticityAssembleElements(femProblem *theProblem) {
     double g   = theProblem->g;
     double **A = theSystem->A;
     double *B  = theSystem->B;
-
+    printf("nLocalnode = %d\n", nLocal);
     for (iElem = 0; iElem < theMesh->nElem; iElem++) {
         for (j=0; j < nLocal; j++) {
             map[j]  = theMesh->elem[iElem*nLocal+j]; //{3, 8, 4}, map[0]=3, map[1]=8, map[2]=4.
@@ -127,6 +160,8 @@ void femElasticityAssembleElements(femProblem *theProblem) {
     } else {
         printf("The matrix is not symmetrical.\n");
     }
+    printMatrixClean(theProblem->system->A, theProblem->system->size, 20, 1e-8);
+
          
 }
 
