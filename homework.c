@@ -170,55 +170,47 @@ void femElasticityAssembleElements(femProblem *theProblem) {
 double **A_copy = NULL;
 double *B_copy  = NULL;
 
-void femElasticityAssembleNeumann(femProblem *theProblem)
-{
-    femFullSystem  *theSystem   = theProblem->system;
-    femIntegration *theRule     = theProblem->ruleEdge;
-    femDiscrete    *theSpace    = theProblem->spaceEdge;
-    femGeo         *theGeometry = theProblem->geometry;
-    femNodes       *theNodes    = theGeometry->theNodes;
-    femMesh        *theEdges    = theGeometry->theEdges;
-
+void femElasticityAssembleNeumann(femProblem *theProblem) {
+    femFullSystem *theSystem = theProblem->system;
+    femIntegration *theRule = theProblem->ruleEdge;
+    femDiscrete *theSpace = theProblem->spaceEdge;
+    femGeo *theGeometry = theProblem->geometry;
+    femNodes *theNodes = theGeometry->theNodes;
+    femMesh *theEdges = theGeometry->theEdges;
+    
     double x[2], y[2], phi[2];
-    int iBnd, iElem, iInteg, iEdge, i, j, map[2], mapU[2];
-
+    int iBnd, iElem, iInteg, iEdge, i, j, d, map[2], mapU[2];
     int nLocal = 2;
-    double *B  = theSystem->B;
+    double *B = theSystem->B;
 
-    for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++)
-    {
+    for (iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++) {
         femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
         femBoundaryType type = theCondition->type;
-        femDomain *domain = theCondition->domain;
         double value = theCondition->value;
+        int shift = -1;
 
-        if (type == DIRICHLET_X || type == DIRICHLET_Y) { continue; }   // Ignore les Dirichlet
+        if (type == NEUMANN_X) shift = 0;
+        if (type == NEUMANN_Y) shift = 1;
+        if (shift == -1) continue;
 
-        int shift = (type == NEUMANN_X) ? 0 : 1;                        // Décalage pour X ou Y
-
-        for (iEdge = 0; iEdge < domain->nElem; iEdge++)
-        {
-            iElem = domain->elem[iEdge];
-            for (j = 0; j < nLocal; j++)
-            {
+        for (iEdge = 0; iEdge < theCondition->domain->nElem; iEdge++) {
+            iElem = theCondition->domain->elem[iEdge];
+            for (j = 0; j < nLocal; j++) {
                 map[j] = theEdges->elem[iElem * nLocal + j];
                 mapU[j] = 2 * map[j] + shift;
                 x[j] = theNodes->X[map[j]];
                 y[j] = theNodes->Y[map[j]];
             }
 
-            double dx = x[1] - x[0];
-            double dy = y[1] - y[0];
-            double length = sqrt(dx * dx + dy * dy);
-            double jac = length / 2;
+            double jac = sqrt((x[1] - x[0]) * (x[1] - x[0]) + (y[1] - y[0]) * (y[1] - y[0])) / 2.0;
 
-            for (iInteg = 0; iInteg < theRule->n; iInteg++)
-            {
-                double xsi    = theRule->xsi[iInteg];
+            for (iInteg = 0; iInteg < theRule->n; iInteg++) {
+                double xsi = theRule->xsi[iInteg];
                 double weight = theRule->weight[iInteg];
                 femDiscretePhi(theSpace, xsi, phi);
+
                 for (i = 0; i < theSpace->n; i++) {
-                    B[mapU[i]] += phi[i] * value * jac * weight;
+                    B[mapU[i]] += jac * weight * phi[i] * value;
                 }
             }
         }
