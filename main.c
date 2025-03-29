@@ -20,9 +20,11 @@ int main(void) {
     theGeometry->h = 3*10;
     theGeometry->elementType = FEM_TRIANGLE;
     
-    geoMeshGenerate(); // Génère le maillage avec Gmsh
-    geoMeshImport();  // Importe le maillage dans les structures de données de fem.c
-    
+    //geoMeshGenerate(); // Génère le maillage avec Gmsh
+    //geoMeshImport();  // Importe le maillage dans les structures de données de fem.c
+    geoMeshRead("../data/mesh_fix.txt"); // Importation du maillage depuis un fichier .msh
+
+   
     // Nommer les domaines
     // Domain Bottom
     geoSetDomainName(22, "Bottom0");

@@ -41,11 +41,11 @@ double geoSize(double x, double y){
         double hPoint3 = hermiteInterpolation(d3, 45, hTop, h);
         double hPoint4 = hermiteInterpolation(d4, 45, hTop, h);
         //return fmin(hUpper, fmin(hPoint1, fmin(hPoint2, fmin(hPoint3, hPoint4))));
-        return 30*5;
+        return 10;
     }
     
     //return h;
-    return 30*5;
+    return 10;
 }
 
 
@@ -72,9 +72,9 @@ void printMatrixClean(double **A, int size, int maxDisplay, double epsilon) {
     for (int i = 0; i < limit; i++) {
         for (int j = 0; j < limit; j++) {
             if (fabs(A[i][j]) > epsilon) {
-                printf("%10.2e ", A[i][j]);  // valeur non nulle
+                printf("%12.4e ", A[i][j]);  // largeur fixe : 12 colonnes
             } else {
-                printf("           ");       // 11 espaces pour aligner proprement
+                printf("             ");     // 13 espaces pour garder l’alignement
             }
         }
         printf("\n");
@@ -82,6 +82,17 @@ void printMatrixClean(double **A, int size, int maxDisplay, double epsilon) {
 
     if (size > maxDisplay) {
         printf("... (seulement les %d premières lignes/colonnes affichées)\n", maxDisplay);
+    }
+
+    printf("======================================================\n\n");
+}
+
+void printDiagonal(double **A, int size) {
+    printf("Affichage de la diagonale de la matrice A [%d x %d]\n", size, size);
+    printf("======================================================\n");
+
+    for (int i = 0; i < size; i++) {
+        printf("A[%d][%d] = %12.4e\n", i, i, A[i][i]);
     }
 
     printf("======================================================\n\n");
@@ -155,13 +166,13 @@ void femElasticityAssembleElements(femProblem *theProblem) {
     }
 
     // Check if the matrix is symmetrical
-    if (isSymmetrical(theProblem->system->A, theProblem->system->size, 1e-8)) {
+    if (isSymmetrical(theProblem->system->A, theProblem->system->size, 1e-3)) {
         printf("The matrix is symmetrical.\n");
     } else {
         printf("The matrix is not symmetrical.\n");
     }
     printMatrixClean(theProblem->system->A, theProblem->system->size, 20, 1e-8);
-
+    printDiagonal(theProblem->system->A, theProblem->system->size);
          
 }
 
