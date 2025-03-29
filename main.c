@@ -155,15 +155,34 @@ int main(void) {
     femElasticityAddBoundaryCondition(theProblem, "Bottom7", DIRICHLET_Y, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "Bottom8", DIRICHLET_Y, 0.0);
 
+    femElasticityAddBoundaryCondition(theProblem, "Bottom0", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom1", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom2", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom3", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom4", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom5", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom6", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom7", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Bottom8", DIRICHLET_X, 0.0);
+
+
     // Add boundary conditions for Gauche domains
     femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_X, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_X, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "Gauche2", DIRICHLET_X, 0.0);
 
+    femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_Y, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_Y, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Gauche2", DIRICHLET_Y, 0.0);
+
     // Add boundary conditions for Droite domains
     femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_X, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_X, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_X, 0.0);
+
+    femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_Y, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_Y, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_Y, 0.0);
 
     // Add boundary conditions for Haut domains
     femElasticityAddBoundaryCondition(theProblem, "Haut0", DIRICHLET_Y, 0.0);
@@ -173,8 +192,15 @@ int main(void) {
     femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_Y, 0.0);
     femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_Y, 0.0);
 
+    femElasticityAddBoundaryCondition(theProblem, "Haut0", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Haut1", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_X, 0.0);
+    femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_X, 0.0);
 
 
+    // Add boundary conditions for Patine domains
     femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, -1e4);
     femElasticityAddBoundaryCondition(theProblem, "Patine1", NEUMANN_Y, -1e4);
     
