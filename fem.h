@@ -123,6 +123,7 @@
  void                geoMeshPrint();
  void                geoMeshWrite(const char *filename);
  void                geoMeshRead(const char *filename);
+ void                geoMeshFix(femGeo *geometry);
  void                geoSetDomainName(int iDomain, char *name);
  int                 geoGetDomain(char *name);
  void                geoFinalize();

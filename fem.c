@@ -8,6 +8,7 @@
  */
 
  #include "fem.h"
+ #include <stdbool.h>
 
 
  femGeo theGeometry;
@@ -320,6 +321,198 @@
      
     fclose(file);
  }
+
+
+ // =========================================================================
+ //              Mesh Correction Function (Student Project Addition)
+ // =========================================================================
+
+ /**
+  * @brief Implémentation de la correction du maillage (suppression des nœuds isolés).
+  * @cite maillage.py by Vincent Legat, UCL-IMMC
+  *
+  * Fonction ajoutée pour reproduire le comportement d'un script externe (maillage.py)
+  * qui supprimait les nœuds non référencés par les éléments 2D, corrigeant
+  * potentiellement des problèmes de pivots nuls ou de maillage invalide généré
+  * par certaines versions/configurations de Gmsh.
+  *
+  * Étapes :
+  * 1. Parcours des éléments 2D pour marquer tous les nœuds utilisés.
+  * 2. Comptage des nœuds utilisés et création d'une table de renumérotation
+  *    (ancien indice -> nouvel indice, ou -1 si supprimé).
+  * 3. Création de nouveaux tableaux pour les coordonnées X et Y contenant
+  *    uniquement les nœuds conservés.
+  * 4. Création d'un nouveau tableau pour la connectivité des éléments 2D
+  *    avec les indices de nœuds mis à jour selon la table de renumérotation.
+  * 5. Remplacement des anciens tableaux (coordonnées, connectivité 2D) par les
+  *    nouveaux dans la structure femGeo et mise à jour du nombre de nœuds.
+  * 6. Libération de la mémoire temporaire utilisée.
+  *
+  * @param geometry Pointeur vers la structure femGeo à corriger en place.
+  */
+
+ void geoMeshFix(femGeo *geometry) {
+    printf("Geo     : Running mesh fix...\n");
+    if (!geometry || !geometry->theNodes || !geometry->theElements) {
+        Warning("geoMeshFix called with invalid geometry data.");
+        return;
+    }
+
+    femNodes *theNodes = geometry->theNodes;
+    femMesh *theElements = geometry->theElements;
+    // On ne touche PAS aux theEdges et theDomains ici pour préserver les indices
+
+    int nnodes_old = theNodes->nNodes;
+    int nelem = theElements->nElem;
+    int nlocal_elem = theElements->nLocalNode;
+
+    if (nnodes_old == 0 || nelem == 0) {
+        printf("Geo     : Mesh fix skipped (no nodes or elements).\n");
+        return;
+    }
+
+    // 1. Marquer les nœuds utilisés UNIQUEMENT par les éléments 2D
+    bool *node_used = calloc(nnodes_old, sizeof(bool)); // Initialise à false
+    if (!node_used) Error("Memory allocation failed for node_used in geoMeshFix");
+
+    for (int i = 0; i < nelem; ++i) {
+        for (int j = 0; j < nlocal_elem; ++j) {
+            int node_idx = theElements->elem[i * nlocal_elem + j];
+            if (node_idx >= 0 && node_idx < nnodes_old) {
+                node_used[node_idx] = true;
+            } else {
+                 fprintf(stderr, "Warning: Invalid node index %d found in element %d during mesh fix.\n", node_idx, i);
+            }
+        }
+    }
+
+    // 2. Compter les nœuds utilisés et créer la table de renumérotation
+    int nnodes_new = 0;
+    for (int i = 0; i < nnodes_old; ++i) {
+        if (node_used[i]) {
+            nnodes_new++;
+        }
+    }
+
+    if (nnodes_new == nnodes_old) {
+        printf("Geo     : Mesh fix not needed. All nodes are used by 2D elements.\n");
+        free(node_used);
+        return; // Pas besoin de corriger
+    }
+     if (nnodes_new == 0) {
+         printf("Geo     : Mesh fix resulted in zero nodes. Aborting fix.\n");
+         free(node_used);
+         return; // Évite de créer un maillage vide
+     }
+
+    printf("Geo     : Fixing mesh: Removing %d nodes not used by 2D elements.\n", nnodes_old - nnodes_new);
+
+    int *renumber = malloc(nnodes_old * sizeof(int));
+    if (!renumber) { free(node_used); Error("Memory allocation failed for renumber map in geoMeshFix"); }
+
+    int current_new_index = 0;
+    for (int i = 0; i < nnodes_old; ++i) {
+        if (node_used[i]) {
+            renumber[i] = current_new_index++;
+        } else {
+            renumber[i] = -1; // Marquer comme non utilisé/supprimé
+        }
+    }
+
+    // 3. Créer les nouvelles listes de coordonnées
+    double *newX = malloc(nnodes_new * sizeof(double));
+    double *newY = malloc(nnodes_new * sizeof(double));
+    if (!newX || !newY) {
+        free(node_used); free(renumber);
+        Error("Memory allocation failed for new node coordinates in geoMeshFix");
+    }
+
+    current_new_index = 0;
+    for (int i = 0; i < nnodes_old; ++i) {
+        if (node_used[i]) { // ou renumber[i] != -1
+            newX[current_new_index] = theNodes->X[i];
+            newY[current_new_index] = theNodes->Y[i];
+            current_new_index++;
+        }
+    }
+
+    // 4. Créer la nouvelle liste d'éléments 2D avec les indices renumérotés
+    int *newElem = malloc(nelem * nlocal_elem * sizeof(int));
+    if (!newElem) {
+        free(node_used); free(renumber); free(newX); free(newY);
+        Error("Memory allocation failed for new element connectivity in geoMeshFix");
+    }
+    for (int i = 0; i < nelem; ++i) {
+        for (int j = 0; j < nlocal_elem; ++j) {
+            int old_node_idx = theElements->elem[i * nlocal_elem + j];
+            if (old_node_idx >= 0 && old_node_idx < nnodes_old) {
+                 int new_node_idx = renumber[old_node_idx];
+                  if (new_node_idx == -1) {
+                      // Cela ne devrait pas arriver car on a marqué les noeuds utilisés par ces éléments
+                       fprintf(stderr,"Error: Inconsistency in geoMeshFix - node %d used by element %d marked for removal.\n", old_node_idx, i);
+                       newElem[i * nlocal_elem + j] = -1; // Indique une erreur
+                  } else {
+                       newElem[i * nlocal_elem + j] = new_node_idx;
+                  }
+            } else {
+                 fprintf(stderr,"Warning: Invalid old node index %d in element %d during renumbering.\n", old_node_idx, i);
+                 newElem[i * nlocal_elem + j] = -1; // Indique une erreur
+            }
+        }
+    }
+
+     // 5. Mettre à jour la connectivité des ARÊTES (theEdges)
+    if (geometry->theEdges && geometry->theEdges->elem) {
+        printf("    Updating edge connectivity with renumbered nodes...\n");
+        femMesh *theEdges = geometry->theEdges;
+        int nEdges = theEdges->nElem;
+        int nLocalEdge = theEdges->nLocalNode; // Devrait être 2
+        int *edgesElem = theEdges->elem;
+        int invalid_node_count_in_edges = 0;
+
+        for (int i = 0; i < nEdges * nLocalEdge; ++i) { // Parcours linéaire du tableau
+            int old_node_idx = edgesElem[i];
+            if (old_node_idx >= 0 && old_node_idx < nnodes_old) {
+                int new_node_idx = renumber[old_node_idx];
+                edgesElem[i] = new_node_idx; // Remplace par le nouvel indice ou -1
+                if (new_node_idx == -1) {
+                    invalid_node_count_in_edges++;
+                }
+            } else {
+                // L'indice était déjà invalide avant la correction ?
+                fprintf(stderr, "    Warning: Found invalid node index %d in original edgesElem[%d]. Setting to -1.\n", old_node_idx, i);
+                edgesElem[i] = -1;
+                invalid_node_count_in_edges++;
+            }
+        }
+        if (invalid_node_count_in_edges > 0) {
+            printf("    Info: %d node entries in edges now point to removed nodes (index -1).\n", invalid_node_count_in_edges);
+        }
+    } else {
+        printf("    Skipping edge connectivity update (no edges or elem data).\n");
+    }
+
+    // 6. Libérer les anciennes données de nœuds et d'éléments 2D et mettre à jour la structure geometry
+    free(theNodes->X);
+    free(theNodes->Y);
+    free(theElements->elem);
+
+    theNodes->X = newX;
+    theNodes->Y = newY;
+    theNodes->nNodes = nnodes_new;
+
+    theElements->elem = newElem;
+    // theElements->nElem et nLocalNode ne changent pas
+
+    // 7. Libérer la mémoire temporaire
+    free(node_used);
+    free(renumber);
+
+    printf("Geo     : Mesh fix completed. New node count: %d\n", nnodes_new);
+}
+
+
+
  
  void geoSetDomainName(int iDomain, char *name) 
  {
@@ -720,35 +913,80 @@
      free(theProblem);
  }
      
+
  void femElasticityAddBoundaryCondition(femProblem *theProblem, char *nameDomain, femBoundaryType type, double value)
  {
      int iDomain = geoGetDomain(nameDomain);
+     // Suppression des vérifs NULL pour concision (elles sont dans Error() ou implicites)
      if (iDomain == -1)  Error("Undefined domain :-(");
- 
+
      femBoundaryCondition* theBoundary = malloc(sizeof(femBoundaryCondition));
+     // Ajout vérif malloc (important)
+     if (!theBoundary) Error("AddBoundaryCondition: malloc failed for femBoundaryCondition.");
      theBoundary->domain = theProblem->geometry->theDomains[iDomain];
      theBoundary->value = value;
      theBoundary->type = type;
      theProblem->nBoundaryConditions++;
      int size = theProblem->nBoundaryConditions;
-     
-     if (theProblem->conditions == NULL)
-         theProblem->conditions = malloc(size*sizeof(femBoundaryCondition*));
-     else 
-         theProblem->conditions = realloc(theProblem->conditions, size*sizeof(femBoundaryCondition*));
-     theProblem->conditions[size-1] = theBoundary;
-     
+     int indexNewCondition = size - 1; // Index de la condition actuelle
+
+     // Utilisation de realloc pour le tableau de conditions
+     femBoundaryCondition **newConditions = realloc(theProblem->conditions, size * sizeof(femBoundaryCondition*));
+      if (!newConditions) {
+          theProblem->nBoundaryConditions--; free(theBoundary); // Annule et libère
+          Error("AddBoundaryCondition: realloc failed for conditions array."); return; }
+     theProblem->conditions = newConditions;
+     theProblem->conditions[indexNewCondition] = theBoundary;
+
+     // Appliquer contraintes seulement pour Dirichlet
      int shift=-1;
-     if (type == DIRICHLET_X)  shift = 0;      
-     if (type == DIRICHLET_Y)  shift = 1;  
-     if (shift == -1) return; 
-     int *elem = theBoundary->domain->elem;
-     int nElem = theBoundary->domain->nElem;
-     for (int e=0; e<nElem; e++) {
-         for (int i=0; i<2; i++) {
-             int node = theBoundary->domain->mesh->elem[2*elem[e]+i];
-             theProblem->constrainedNodes[2*node+shift] = size-1; }}    
+     if (type == DIRICHLET_X)  shift = 0;
+     if (type == DIRICHLET_Y)  shift = 1;
+     if (shift == -1) return; // Fin si ce n'est pas Dirichlet
+
+     // Préparation pour parcourir les noeuds du domaine
+     femDomain *theDomain = theBoundary->domain;
+     femMesh   *theEdgesMesh = theDomain->mesh;
+     int *domainEdges = theDomain->elem;
+     int nEdgesInDomain = theDomain->nElem;
+     int nTotalNodes = theProblem->geometry->theNodes->nNodes; // Nb noeuds APRES fix
+
+     // Boucle sur les arêtes du domaine
+     for (int e=0; e<nEdgesInDomain; e++) {
+         int edgeIndex = domainEdges[e];
+          // Vérification minimale de l'indice d'arête
+          if (edgeIndex < 0 || edgeIndex >= theEdgesMesh->nElem) continue;
+
+         // Boucle sur les 2 noeuds de l'arête
+         for (int i=0; i<theEdgesMesh->nLocalNode; i++) { // nLocalNode == 2
+             int nodeIndex = theEdgesMesh->elem[edgeIndex * theEdgesMesh->nLocalNode + i];
+
+             // ================== CHANGEMENT NÉCESSAIRE ==================
+             // Ignorer le nœud s'il a été supprimé par geoMeshFix
+             if (nodeIndex == -1) {
+                 continue; // Passe au nœud suivant
+             }
+             // ============================================================
+
+             // Vérification que l'indice (non -1) est dans les bornes valides
+             if (nodeIndex >= 0 && nodeIndex < nTotalNodes) {
+                 int dofIndex = 2 * nodeIndex + shift;
+                  // Optionnel : Avertissement si écrasement (conservé car utile)
+                 if (theProblem->constrainedNodes[dofIndex] != -1 && theProblem->constrainedNodes[dofIndex] != indexNewCondition) {
+                    fprintf(stderr,"Warning: AddBC: Node %d (DOF %d) already constrained. Overwriting.\n", nodeIndex, dofIndex);
+                 }
+                 // Appliquer la contrainte
+                 theProblem->constrainedNodes[dofIndex] = indexNewCondition;
+             } else {
+                  // Log l'erreur si l'indice est invalide (autre que -1)
+                  fprintf(stderr, "Warning: AddBC: Invalid node index %d (max: %d) found for edge %d.\n", nodeIndex, nTotalNodes-1, edgeIndex);
+             }
+         } // Fin boucle noeuds
+     } // Fin boucle arêtes
  }
+
+
+
  
  void femElasticityPrint(femProblem *theProblem)  
  {    
