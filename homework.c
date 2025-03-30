@@ -55,43 +55,78 @@
   * @param y Coordonnée Y du point où la taille est demandée.
   * @return double Taille de maille souhaitée au point (x,y).
   */
- double geoSize(double x, double y) {
-     femGeo* theGeometry = geoGetGeometry();
-     double h_base = theGeometry->h; 
- 
-     // Coordonnées des points d'intérêt pour le raffinement sur le haut du rail UIC60
-     // Ces valeurs sont spécifiques à la géométrie UIC60_copie2.geo
-     const double yTop = 172.0;
-     const double X1   = 37.85;
-     const double X2   = -X1;
-     const double X3   = 33.8;
-     const double Y3   = 164.3;
-     const double X4   = -X3;
- 
-     // Calcul des distances du point (x,y) aux zones d'intérêt
-     double d_top  = fabs(yTop - y);                                // Distance verticale au sommet
-     double d_pt1  = fabs(X1 - x);                                  // Distance horizontale au point 1
-     double d_pt2  = fabs(X2 - x);                                  // Distance horizontale au point 2
-     double d_pt3  = sqrt(pow(X3 - x, 2) + pow(Y3 - y, 2));         // Distance euclidienne au point 3
-     double d_pt4  = sqrt(pow(X4 - x, 2) + pow(Y3 - y, 2));         // Distance euclidienne au point 4
- 
-     // Paramètres du raffinement local
-     double h_refined = h_base * 0.1;                               // Taille de maille cible très fine dans la zone d'intérêt
-     double influence_radius = 20.0;                                // Rayon d'influence autour des points pour le raffinement
- 
-     // Condition pour appliquer le raffinement uniquement dans la partie supérieure
-     if (y > 140.0) {
-        double min_dist = d_top;
-        min_dist = fmin(min_dist, d_pt1);
-        min_dist = fmin(min_dist, d_pt2);
-        min_dist = fmin(min_dist, d_pt3);
-        min_dist = fmin(min_dist, d_pt4);
- 
-        return hermiteInterpolation(min_dist, influence_radius, h_refined, h_base);
-     }
- 
-     return h_base;
- }
+
+double pointToSegmentDistance(double x, double y, double x1, double y1, double x2, double y2) {
+    double A = x - x1;
+    double B = y - y1;
+    double C = x2 - x1;
+    double D = y2 - y1;
+
+    double dot = A * C + B * D;
+    double len_sq = C * C + D * D;
+    double param = (len_sq != 0) ? dot / len_sq : -1;
+
+    double xx, yy;
+
+    if (param < 0) {
+        xx = x1;
+        yy = y1;
+    } else if (param > 1) {
+        xx = x2;
+        yy = y2;
+    } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+    }
+
+    double dx = x - xx;
+    double dy = y - yy;
+    return sqrt(dx * dx + dy * dy);
+}
+
+double geoSize(double x, double y) {
+    femGeo* theGeometry = geoGetGeometry();
+    double h_base = theGeometry->h; 
+
+    // Coordonnées des points d'intérêt pour le raffinement sur le haut du rail UIC60
+    const double yTop = 172.0;
+    const double X1   = 37.85;
+    const double X2   = -X1;
+    const double X3   = 33.8;
+    const double Y3   = 164.3;
+    const double X4   = -X3;
+    
+    // Segment unique d'intérêt
+    const double xSegStart = 8.25, ySegStart = 31.5, xSegEnd = 8.25, ySegEnd = 121.0;
+
+    // Calcul des distances du point (x,y) aux zones d'intérêt
+    double d_top  = fabs(yTop - y);                                                        // Distance verticale au sommet
+    double d_pt1  = fabs(X1 - x);                                                          // Distance horizontale au point 1
+    double d_pt2  = fabs(X2 - x);                                                          // Distance horizontale au point 2
+    double d_pt3  = sqrt(pow(X3 - x, 2) + pow(Y3 - y, 2));                                 // Distance euclidienne au point 3
+    double d_pt4  = sqrt(pow(X4 - x, 2) + pow(Y3 - y, 2));                                 // Distance euclidienne au point 4
+    double dSeg   = pointToSegmentDistance(x, y, xSegStart, ySegStart, xSegEnd, ySegEnd);  // Distance au segment
+
+    // Paramètres du raffinement local
+    double h_refined = h_base * 0.1;       // Taille de maille cible très fine dans la zone d'intérêt
+    double influence_radius = 20.0;        // Rayon d'influence autour des points pour le raffinement
+
+    // Calcul du h dans la zone supérieure
+    double h_upper = h_base;
+    if (y > 140.0) {
+        double min_dist = fmin(fmin(fmin(fmin(d_top, d_pt1), d_pt2), d_pt3), d_pt4);
+        h_upper = hermiteInterpolation(min_dist, influence_radius, h_refined, h_base);
+    }
+
+    // Raffinement général en fonction du segment, toujours appliqué
+    double h_segment = hermiteInterpolation(dSeg, 25, h_refined, h_base);
+
+    // Retour du minimum des deux influences (haut et segment)
+    return fmin(h_upper, h_segment);
+}
+
+
+
  
  /**
   * @brief Lance la génération du maillage 2D via l'API Gmsh.

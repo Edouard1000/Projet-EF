@@ -63,7 +63,7 @@
      geoInitialize();
      femGeo* theGeometry = geoGetGeometry();
  
-     theGeometry->h = 7.0;
+     theGeometry->h = 30.0;
      theGeometry->elementType = FEM_TRIANGLE;
 
 
@@ -103,14 +103,6 @@
      //                        STAGE 3: Domain Naming
      // =========================================================================
      printf("STAGE 3: Naming Domains (Boundaries)...\n");
- 
-     // !! ========================== ATTENTION CRUCIALE ========================== !!
-     // !! Les indices iDomain (0, 1, 2, ...) dans geoSetDomainName DOIVENT       !!
-     // !! correspondre à l'ORDRE dans lequel geoMeshImport a traité les          !!
-     // !! Physical Groups de dimension 1 (lignes) de votre fichier .geo.         !!
-     // !! Cet ordre N'EST PAS forcément le Tag (numéro) du Physical Group.       !!
-     // !! MÉTHODE : Décommentez geoMeshPrint() ci-dessous pour vérifier l'ordre. !!
-     // !! ====================================================================== !!
      // geoMeshPrint(); // Décommentez temporairement pour vérifier les indices/noms
  
      // Application des noms (VÉRIFIEZ ET CORRIGEZ LES INDICES !)
@@ -164,7 +156,7 @@
  
      // Bloc de visualisation optionnelle du maillage
      printf("  Mesh visualization block present but disabled (enable by changing 'if(false)').\n");
-     if (true) // Activer/déactiver la visualisation du maillage
+     if (false) // Activer/déactiver la visualisation du maillage
      {
          printf("  Starting mesh visualization (optional)...\n");
          GLFWwindow* window_mesh = glfemInit("EPL1110 : Mesh generation (Fixed)");
@@ -272,23 +264,26 @@
      femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Gauche2", DIRICHLET_X, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_Y, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_Y, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_Y, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Gauche2", DIRICHLET_Y, 0.0);
  
      // Dirichlet X=0, Y=0 sur 'DroiteX'
-     femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_X, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_X, 0.0);
+     femElasticityAddBoundaryCondition(theProblem, "Droite0", NEUMANN_X, -3e4);
+     femElasticityAddBoundaryCondition(theProblem, "Droite1", NEUMANN_X, -3e4);
+
+     //femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_X, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_X, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_Y, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_Y, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_Y, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_Y, 0.0);
  
      // Dirichlet X=0, Y=0 sur 'HautX'
      femElasticityAddBoundaryCondition(theProblem, "Haut0", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut1", DIRICHLET_Y, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_Y, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_Y, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_Y, 0.0);
+     //femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut0", DIRICHLET_X, 0.0);
@@ -332,7 +327,7 @@
      // =========================================================================
      printf("STAGE 8: Post-Processing Results for Visualization...\n");
  
-     double deformationFactor = 30000;
+     double deformationFactor = 2e4;
  
      // Allocation mémoire pour les champs nodaux de visualisation
      double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
