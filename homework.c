@@ -96,16 +96,18 @@ double geoSize(double x, double y) {
     const double Y3   = 164.3;
     const double X4   = -X3;
     
-    // Segment unique d'intérêt
-    const double xSegStart = 8.25, ySegStart = 31.5, xSegEnd = 8.25, ySegEnd = 121.0;
+    // Segments d'intérêt
+    const double xSegStart = 8.25,  ySegStart = 31.5,  xSegEnd = 8.25,  ySegEnd = 121.0;
+    const double xSeg2Start = -xSegStart, ySeg2Start = ySegStart, xSeg2End = -xSegEnd, ySeg2End = ySegEnd;
 
-    // Calcul des distances du point (x,y) aux zones d'intérêt
+    // Calcul des distances aux zones d'intérêt
     double d_top  = fabs(yTop - y);                                                        // Distance verticale au sommet
     double d_pt1  = fabs(X1 - x);                                                          // Distance horizontale au point 1
     double d_pt2  = fabs(X2 - x);                                                          // Distance horizontale au point 2
     double d_pt3  = sqrt(pow(X3 - x, 2) + pow(Y3 - y, 2));                                 // Distance euclidienne au point 3
     double d_pt4  = sqrt(pow(X4 - x, 2) + pow(Y3 - y, 2));                                 // Distance euclidienne au point 4
-    double dSeg   = pointToSegmentDistance(x, y, xSegStart, ySegStart, xSegEnd, ySegEnd);  // Distance au segment
+    double dSeg   = pointToSegmentDistance(x, y, xSegStart, ySegStart, xSegEnd, ySegEnd);  // Distance au segment 1
+    double dSeg2  = pointToSegmentDistance(x, y, xSeg2Start, ySeg2Start, xSeg2End, ySeg2End); // Distance au segment 2
 
     // Paramètres du raffinement local
     double h_refined = h_base * 0.1;       // Taille de maille cible très fine dans la zone d'intérêt
@@ -118,12 +120,14 @@ double geoSize(double x, double y) {
         h_upper = hermiteInterpolation(min_dist, influence_radius, h_refined, h_base);
     }
 
-    // Raffinement général en fonction du segment, toujours appliqué
-    double h_segment = hermiteInterpolation(dSeg, 25, h_refined, h_base);
+    // Raffinement général en fonction des deux segments
+    double h_segment  = hermiteInterpolation(dSeg,  25, h_refined, h_base);
+    double h_segment2 = hermiteInterpolation(dSeg2, 25, h_refined, h_base);
 
-    // Retour du minimum des deux influences (haut et segment)
-    return fmin(h_upper, h_segment);
+    // Retour du minimum des influences (haut, segment 1 et segment 2)
+    return fmin(h_upper, fmin(h_segment, h_segment2));
 }
+
 
 
 
