@@ -143,7 +143,7 @@ double geoSize(double x, double y) {
      int ierr;
      femGeo* theGeometry = geoGetGeometry(); // Pas utilisé directement ici, mais assure que la structure existe
  
-     const char* geoFilePath = "../Projet-EF/UIC60_copie2.geo";
+     const char* geoFilePath = "../Projet-EF/UIC60.geo";
  
      printf("Geo     : Opening geometry file: %s\n", geoFilePath);
      gmshOpen(geoFilePath, &ierr);

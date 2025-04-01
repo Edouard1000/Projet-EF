@@ -28,7 +28,7 @@
  // =========================================================================
  const double TARGET_POINT_X_29 = 19.4; // Coordonnées Point(29) du .geo
  const double TARGET_POINT_Y_29 = 171.0;
- const double TARGET_NODE_TOLERANCE_VISU = 3; // Tolérance pour avertissement dans findClosestNode
+ const double TARGET_NODE_TOLERANCE_VISU = 2; // Tolérance pour avertissement dans findClosestNode
  
  // =========================================================================
  //                            Helper Functions
@@ -151,7 +151,7 @@
  
      // Bloc de visualisation optionnelle du maillage
      printf("  Mesh visualization block present but disabled (enable by changing 'if(false)').\n");
-     if (true) // Activer/déactiver la visualisation du maillage
+     if (false) // Activer/déactiver la visualisation du maillage
      {
          printf("  Starting mesh visualization (optional)...\n");
          GLFWwindow* window_mesh = glfemInit("RailUIC60 : Mesh generation (Fixed)");
@@ -211,7 +211,7 @@
   
       double E   = 211e9;
       double nu  = 0.3;
-      double rho = 7850;
+      double rho = 10000.0;
       double g   = 9.81;
   
       femProblem* theProblem = femElasticityCreate(theGeometry, E, nu, rho, g, PLANAR_STRAIN);
@@ -229,7 +229,6 @@
      //                 STAGE 6: Apply Boundary Conditions
      // =========================================================================
      printf("STAGE 6: Applying Boundary Conditions...\n");
-     // Votre bloc femElasticityAddBoundaryCondition original (copiez-le ici)
      femElasticityAddBoundaryCondition(theProblem, "Bottom0", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Bottom1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Bottom2", DIRICHLET_Y, 0.0);
@@ -263,7 +262,7 @@
      femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_Y, 0.0);
      // Haut
-     //femElasticityAddBoundaryCondition(theProblem, "Haut1", DIRICHLET_Y, 0.0); // Modifié dans votre code
+     //femElasticityAddBoundaryCondition(theProblem, "Haut1", DIRICHLET_Y, 0.0); 
      femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_Y, 0.0);
@@ -272,13 +271,15 @@
      femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_X, 0.0);
-     //femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_Y, 0.0); // Modifié dans votre code
-     // Charge Neumann (votre code récent)
-     double load = -100000;
+     //femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_Y, 0.0); 
+     // Charge Neumann
+     double load = -6250000; // GPa
+
      femElasticityAddBoundaryCondition(theProblem, "Haut2", NEUMANN_Y, load*0.5);
-     femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, load*0.25);
-     femElasticityAddBoundaryCondition(theProblem, "Haut1", NEUMANN_Y, load*0.25);
-     // Patine1 Diri (votre code récent)
+     femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, load*0.5);
+     femElasticityAddBoundaryCondition(theProblem, "Haut1", NEUMANN_Y, load*0.5);
+     
+
      femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_Y, 0.0);
      
@@ -331,7 +332,7 @@
      //         STAGE 8: Post-Processing and Visualization Setup
      // =========================================================================
      printf("STAGE 8: Post-Processing Results for Visualization...\n");
-     double deformationFactor = 30000.0; // Vos valeurs
+     double deformationFactor = 1; // Vos valeurs
      double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
      double *forcesX = malloc(theNodes->nNodes * sizeof(double));
      double *forcesY = malloc(theNodes->nNodes * sizeof(double));
