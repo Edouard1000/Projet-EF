@@ -273,11 +273,11 @@
      femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_X, 0.0);
      //femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_Y, 0.0); 
      // Charge Neumann
-     double load = -6250000; // GPa
+     double load = -1e8; // GPa
 
      femElasticityAddBoundaryCondition(theProblem, "Haut2", NEUMANN_Y, load*0.5);
-     femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, load*0.5);
-     femElasticityAddBoundaryCondition(theProblem, "Haut1", NEUMANN_Y, load*0.5);
+     femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, load*0.25);
+     femElasticityAddBoundaryCondition(theProblem, "Haut1", NEUMANN_Y, load*0.25);
      
 
      femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_X, 0.0);
@@ -332,7 +332,7 @@
      //         STAGE 8: Post-Processing and Visualization Setup
      // =========================================================================
      printf("STAGE 8: Post-Processing Results for Visualization...\n");
-     double deformationFactor = 1; // Vos valeurs
+     double deformationFactor = 10000; // Vos valeurs
      double *normDisplacement = malloc(theNodes->nNodes * sizeof(double));
      double *forcesX = malloc(theNodes->nNodes * sizeof(double));
      double *forcesY = malloc(theNodes->nNodes * sizeof(double));
