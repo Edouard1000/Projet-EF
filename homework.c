@@ -280,15 +280,15 @@ double geoSize(double x, double y) {
   * @param theProblem Pointeur vers la structure du problème.
   */
  void femElasticityAssembleNeumann(femProblem *theProblem) {
-     // Raccourcis
-     femFullSystem  *theSystem = theProblem->system;
-     femIntegration *theRule = theProblem->ruleEdge; // Règle d'intégration sur les arêtes
-     femDiscrete    *theSpace = theProblem->spaceEdge;// Espace EF sur les arêtes (P1)
-     femGeo         *theGeometry = theProblem->geometry;
-     femNodes       *theNodes = theGeometry->theNodes;
-     femMesh        *theEdges = theGeometry->theEdges; // Maillage contenant TOUTES les arêtes
+     // ---Récupération des structures nécessaires---
+     femFullSystem  *theSystem = theProblem->system;        // Système global
+     femIntegration *theRule = theProblem->ruleEdge;        // Règle d'intégration sur les arêtes
+     femDiscrete    *theSpace = theProblem->spaceEdge;      // Espace EF sur les arêtes (P1)
+     femGeo         *theGeometry = theProblem->geometry;    // Géométrie du maillage
+     femNodes       *theNodes = theGeometry->theNodes;      // Nœuds du maillage
+     femMesh        *theEdges = theGeometry->theEdges;      // Maillage contenant TOUTES les arêtes
  
-     // Vérifications
+     // ---Vérifications---
      if (!theSystem || !theRule || !theSpace || !theGeometry || !theNodes ) {
          Error("AssembleNeumann: Missing required data structures."); return; }
      if (!theEdges) {
@@ -301,7 +301,7 @@ double geoSize(double x, double y) {
      int nLocal = 2;
      double *B = theSystem->B;
  
-     // Boucle sur toutes les conditions aux limites définies
+     // ---Boucle sur toutes les conditions aux limites définies---
      for (int iBnd = 0; iBnd < theProblem->nBoundaryConditions; iBnd++) {
          femBoundaryCondition *theCondition = theProblem->conditions[iBnd];
          if (!theCondition) continue; // Skip si condition invalide

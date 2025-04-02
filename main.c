@@ -26,10 +26,11 @@
  // =========================================================================
  //                            Target Point Definition
  // =========================================================================
- const double TARGET_POINT_X_29 = 19.4; // Coordonnées Point(29) du .geo
- const double TARGET_POINT_Y_29 = 171.0;
- const double TARGET_NODE_TOLERANCE_VISU = 2; // Tolérance pour avertissement dans findClosestNode
+ const double TARGET_POINT_X_29 = 19.4;         // Coordonnée x Point(29) du .geo
+ const double TARGET_POINT_Y_29 = 171.0;        // Coordonnée y Point(29) du .geo
+ const double TARGET_NODE_TOLERANCE_VISU = 2;   // Tolérance pour avertissement dans findClosestNode
  
+
  // =========================================================================
  //                            Helper Functions
  // =========================================================================
@@ -110,7 +111,9 @@
      //                        STAGE 3: Domain Naming
      // =========================================================================
      printf("STAGE 3: Naming Domains (Boundaries)...\n");
-     // Votre bloc de geoSetDomainName original (copiez-le ici)
+     
+     // --- Attribution de noms aux domaines ---
+     // Note: Les noms sont attribués en fonction de l'ordre des domaines dans le maillage
      if (theGeometry->nDomains > 0)  geoSetDomainName(0, "Bottom4");   else printf("  Warning: Skipping domain index 0\n");
      if (theGeometry->nDomains > 1)  geoSetDomainName(1, "Bottom5");
      if (theGeometry->nDomains > 2)  geoSetDomainName(2, "Bottom6");
@@ -134,6 +137,7 @@
      if (theGeometry->nDomains > 20) geoSetDomainName(20, "Haut2");
      if (theGeometry->nDomains > 21) geoSetDomainName(21, "Haut1");
      if (theGeometry->nDomains > 22) geoSetDomainName(22, "Bottom0"); else printf("  Warning: Skipping domain index 22\n");
+     
      printf("  Domain naming attempt completed.\n");
  
  
@@ -149,7 +153,7 @@
      printf("  Calculating mesh size field for visualization...\n");
      for(int i=0; i < theNodes->nNodes; ++i) { meshSizeField[i] = geoSize(theNodes->X[i], theNodes->Y[i]); }
  
-     // Bloc de visualisation optionnelle du maillage
+     // ---Bloc de visualisation optionnelle du maillage---
      printf("  Mesh visualization block present but disabled (enable by changing 'if(false)').\n");
      if (false) // Activer/déactiver la visualisation du maillage
      {
@@ -229,6 +233,10 @@
      //                 STAGE 6: Apply Boundary Conditions
      // =========================================================================
      printf("STAGE 6: Applying Boundary Conditions...\n");
+     
+     // ---Conditions aux limites Dirichlet---
+     
+     // Bas
      femElasticityAddBoundaryCondition(theProblem, "Bottom0", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Bottom1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Bottom2", DIRICHLET_Y, 0.0);
@@ -247,22 +255,18 @@
      femElasticityAddBoundaryCondition(theProblem, "Bottom6", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Bottom7", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Bottom8", DIRICHLET_X, 0.0);
+     
      // Gauche
-     //femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_X, 0.0);
-     //femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Gauche2", DIRICHLET_X, 0.0);
-     //femElasticityAddBoundaryCondition(theProblem, "Gauche0", DIRICHLET_Y, 0.0);
-     //femElasticityAddBoundaryCondition(theProblem, "Gauche1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Gauche2", DIRICHLET_Y, 0.0);
+     
      // Droite
-     //femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_X, 0.0);
-     //femElasticityAddBoundaryCondition(theProblem, "Droite0", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite1", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Droite2", DIRICHLET_Y, 0.0);
+     
      // Haut
-     //femElasticityAddBoundaryCondition(theProblem, "Haut1", DIRICHLET_Y, 0.0); 
      femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_Y, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_Y, 0.0);
@@ -271,19 +275,19 @@
      femElasticityAddBoundaryCondition(theProblem, "Haut3", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut4", DIRICHLET_X, 0.0);
      femElasticityAddBoundaryCondition(theProblem, "Haut5", DIRICHLET_X, 0.0);
-     //femElasticityAddBoundaryCondition(theProblem, "Haut2", DIRICHLET_Y, 0.0); 
-     // Charge Neumann
-     double load = -1e8; // GPa
+     
+     // Patine
+     femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_X, 0.0);
+     femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_Y, 0.0);
+     
+     // ---Charge Neumann---
+     double load = -1e8; // Valeur de la charge appliquée [N/m]
 
      femElasticityAddBoundaryCondition(theProblem, "Haut2", NEUMANN_Y, load*0.5);
      femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, load*0.25);
      femElasticityAddBoundaryCondition(theProblem, "Haut1", NEUMANN_Y, load*0.25);
      
-
-     femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_X, 0.0);
-     femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_Y, 0.0);
-     
-     femElasticityPrint(theProblem);
+     femElasticityPrint(theProblem); // Imprime les conditions aux limites appliquées
  
  
      // =========================================================================
@@ -365,7 +369,6 @@
      //                 STAGE 9: Output Numerical Results
      // =========================================================================
      printf("STAGE 9: Outputting Numerical Results...\n");
-     // geoMeshWrite reste inchangé...
      double hMin = femMin(normDisplacement, theNodes->nNodes);
      double hMax = femMax(normDisplacement, theNodes->nNodes);
      printf("  ==== Minimum displacement norm     : %14.7e [m] \n", hMin);
@@ -493,15 +496,13 @@
      //                 STAGE 11: Cleanup and Finalization
      // =========================================================================
      printf("STAGE 11: Cleaning Up Memory and Libraries...\n");
-     // Restaurer les coordonnées nodales originales
+     // ---Restaurer les coordonnées nodales originales---
      printf("  Restoring original node coordinates...\n");
      if (originalX && originalY) {
          // IMPORTANT: Vérifier que theNodes existe toujours et a le bon nombre de noeuds
          if (theNodes && theNodes->nNodes > 0) {
              int expected_nNodes = theNodes->nNodes; // Capturer avant la boucle
               for(int i=0; i < expected_nNodes; ++i) {
-                   // Double vérification des indices peut être utile si nNodes a changé ?
-                   // Mais normalement, il ne devrait pas changer entre STAGE 8 et STAGE 11.
                    theNodes->X[i] = originalX[i];
                    theNodes->Y[i] = originalY[i];
                }
