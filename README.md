@@ -1,5 +1,32 @@
-# LEPL1110 | FEM Rail UIC60
+# LEPL1110 | Simulation EF du Rail UIC60
+
+Ce projet réalise une simulation par Éléments Finis (EF) de la réponse élastique linéaire d'une section transversale 2D d'un rail ferroviaire de type UIC60. Il utilise la bibliothèque `fem.c` fournie, complétée par des implémentations spécifiques dans `homework.c`, et GMSH pour la génération du maillage. L'analyse principale porte sur la relation entre la charge appliquée sur le champignon du rail et les déplacements résultants.
+
 ---
+
+## Structure du Projet
+---
+
+.
+├── build/                      # Répertoire de compilation (créé par CMake)
+├── data/                       # Répertoire pour les sorties (maillage, résultats)
+│ ├── elasticity.txt            # Résultats numériques (déplacements nodaux, etc.)
+│ └── mesh.txt                  # Maillage généré/corrigé utilisé par la simulation
+├── glfw/                       # Dépendance pour la visualisation (si incluse)
+├── gmsh/                       # Dépendance GMSH (si incluse)
+├── Projet-EF/                  # Répertoire principal du code source
+│ ├── analyse/
+│ │ └── load_plot.py            # Script Python pour générer les graphiques d'analyse
+│ ├── fem.c                     # Bibliothèque EF de base
+│ ├── fem.h                     # En-tête pour fem.c
+│ ├── glfem.c                   # Code pour la visualisation OpenGL (fourni)
+│ ├── glfem.h                   # En-tête pour glfem.c
+│ ├── homework.c                # Implémentations spécifiques au projet (étudiant)
+│ ├── main.c                    # Programme principal orchestrant la simulation
+│ ├── README.md                 # Description du projet (ce fichier)
+│ └── UIC60.geo                 # Fichier de définition géométrique pour GMSH
+├── .gitignore                  # Fichier de configuration Git
+└── CMakeLists.txt              # Fichier de configuration CMake pour la compilation
 
 ## Prérequis
 
