@@ -7,7 +7,7 @@ Ce projet réalise une simulation par Éléments Finis (EF) de la réponse élas
 ## Structure du Projet
 ---
 
-.
+```bash
 ├── build/                      # Répertoire de compilation (créé par CMake)
 ├── data/                       # Répertoire pour les sorties (maillage, résultats)
 │ ├── elasticity.txt            # Résultats numériques (déplacements nodaux, etc.)
@@ -27,6 +27,7 @@ Ce projet réalise une simulation par Éléments Finis (EF) de la réponse élas
 │ └── UIC60.geo                 # Fichier de définition géométrique pour GMSH
 ├── .gitignore                  # Fichier de configuration Git
 └── CMakeLists.txt              # Fichier de configuration CMake pour la compilation
+```
 
 ## Prérequis
 
