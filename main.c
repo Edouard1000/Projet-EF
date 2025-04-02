@@ -281,7 +281,7 @@
      femElasticityAddBoundaryCondition(theProblem, "Patine1", DIRICHLET_Y, 0.0);
      
      // ---Charge Neumann---
-     double load = -1e8; // Valeur de la charge appliquée [N/m]
+     double load = -6250000; // Valeur de la charge appliquée [N/m]
 
      femElasticityAddBoundaryCondition(theProblem, "Haut2", NEUMANN_Y, load*0.5);
      femElasticityAddBoundaryCondition(theProblem, "Patine0", NEUMANN_Y, load*0.25);
