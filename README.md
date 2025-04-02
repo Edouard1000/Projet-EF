@@ -124,5 +124,5 @@ Le script Python `load_plot.py` génère les graphiques montrant la relation cha
 
 ## Auteurs
 
-*   Théodore Moulaert
-*   Edouard Meurant
+*   Théodore Moulaert - theodore.moulaert@student.uclouvain.be
+*   Edouard Meurant - edouard.meurant@student.uclouvain.be
