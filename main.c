@@ -7,13 +7,14 @@
  * 1. Initialisation de la bibliothèque FEM et Gmsh.
  * 2. Génération, importation et correction du maillage (UIC60.geo par défaut).
  * 3. Attribution de noms aux frontières (domaines).
- * 4. Configuration du problème d'élasticité (Planar Strain OU Axisymétrique).
- * 5. Application des conditions aux limites (Dirichlet et Neumann) adaptées au cas choisi.
- * 6. Résolution du système linéaire par éléments finis.
- * 7. Post-traitement des résultats (calculs, préparation visualisation).
- * 8. Sauvegarde des déplacements nodaux dans data/elasticity.txt.
- * 9. Visualisation interactive des résultats via OpenGL.
- * 10. Nettoyage et libération de la mémoire.
+ * 4. Visualisation optionnelle du maillage (commentée par défaut).
+ * 5. Configuration du problème d'élasticité (Planar Strain OU Axisymétrique).
+ * 6. Application des conditions aux limites (Dirichlet et Neumann) adaptées au cas choisi.
+ * 7. Résolution du système linéaire par éléments finis.
+ * 8. Post-traitement des résultats (calculs, préparation visualisation).
+ * 9. Sauvegarde des déplacements nodaux dans data/elasticity.txt.
+ * 10. Visualisation interactive des résultats via OpenGL.
+ * 11. Nettoyage et libération de la mémoire.
  */
 
  #include "glfem.h"    // Pour la visualisation OpenGL
