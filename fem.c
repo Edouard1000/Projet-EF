@@ -1106,3 +1106,20 @@
      printf("\n  Warning in %s at line %d : \n  %s\n", file, line, text);
      printf("--------------------------------------------------------------------- Yek Yek !! \n\n");                                              
  }
+
+
+ double femSolverGet(femSolver *mySolver,int i,int j)
+{
+    double value = 0;
+    switch (mySolver->type) {
+        case FEM_FULL : value = femFullSystemGet((femFullSystem *)mySolver->solver,i,j); break;
+        //case FEM_BAND : value = femBandSystemGet((femBandSystem *)mySolver->solver,i,j); break;
+        //case FEM_ITER : value = (i==j); break;
+        default : Error("Unexpected solver type"); }
+    return(value);
+}
+
+double femFullSystemGet(femFullSystem* myFullSystem, int myRow, int myCol)
+{
+    return(myFullSystem->A[myRow][myCol]); 
+}

@@ -29,6 +29,8 @@ void 		    glfemPlotField(femMesh *theMesh, double *u);
 void 		    glfemPlotMesh(femMesh *theMesh);
 void        glfemPlotDomain(femDomain *theDomain);
 
+void        glfemPlotSolver(femSolver *theSolver, int size, int width, int heigh);
+
 void 		    glfemMessage(char *message);
 void 		    glfemDrawMessage(int h, int v, char *message);
 void 		    glfemSetRasterSize(int width, int height);

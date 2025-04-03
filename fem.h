@@ -29,7 +29,7 @@
  typedef enum {FEM_TRIANGLE,FEM_QUAD,FEM_EDGE} femElementType;
  typedef enum {DIRICHLET_X,DIRICHLET_Y,NEUMANN_X,NEUMANN_Y} femBoundaryType;
  typedef enum {PLANAR_STRESS,PLANAR_STRAIN,AXISYM} femElasticCase;
- 
+ typedef enum {FEM_FULL,FEM_BAND,FEM_ITER} femSolverType;
  
  typedef struct {
      int nNodes;
@@ -87,7 +87,12 @@
      int size;
  } femFullSystem;
  
- 
+ typedef struct {
+    femSolverType type;
+    femFullSystem *local;
+    void *solver;
+} femSolver;
+
  typedef struct {
      femDomain* domain;
      femBoundaryType type; 
@@ -160,7 +165,8 @@
  void                femFullSystemAlloc(femFullSystem* mySystem, int size);
  double*             femFullSystemEliminate(femFullSystem* mySystem);
  void                femFullSystemConstrain(femFullSystem* mySystem, int myNode, double value);
- 
+ double              femFullSystemGet(femFullSystem* mySystem, int i, int j);
+
  double              femMin(double *x, int n);
  double              femMax(double *x, int n);
  void                femError(char *text, int line, char *file);
@@ -168,6 +174,6 @@
  void                femErrorGmsh(int test, int line, char *file);
  void                femWarning(char *text, int line, char *file);
  
- 
+ double              femSolverGet(femSolver* mySolver, int i, int j);
  #endif
  

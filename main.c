@@ -76,6 +76,7 @@
      printf("      X : Horizontal residual forces field (on deformed mesh)\n");
      printf("      Y : Vertical residual forces field (on deformed mesh)\n");
      printf("      N : Cycle through highlighted domains\n");
+     printf("      S : Spy matrix of the global stiffness matrix\n");
      printf("      ESC : Exit visualization window\n");
      printf("    Target point P29(%.2f, %.2f) displacement will be shown in visu.\n", TARGET_POINT_X_29, TARGET_POINT_Y_29);
      printf("\n\n");
@@ -294,7 +295,10 @@
      //                 STAGE 7: Solve the FEM Problem
      // =========================================================================
      printf("STAGE 7: Assembling and Solving the Linear System...\n");
-  
+      
+     femSolver *gaussSolver = malloc(sizeof(femSolver));
+     gaussSolver->type = FEM_FULL;
+     gaussSolver->solver = theProblem->system;
      double *theSoluce = femElasticitySolve(theProblem);
      printf("  System solved.\n");
      printf("  Calculating residual forces...\n");
@@ -419,6 +423,7 @@
             if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) { mode = 1; }
             if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) { mode = 2; }
             if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) { mode = 3; }
+            if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { mode = 4; }
             if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS && !freezingButton) {
                if (theGeometry->nDomains > 0) domain = (domain + 1) % theGeometry->nDomains;
                freezingButton = TRUE; told = t;
@@ -473,6 +478,11 @@
                            deformationFactor);
                  }
                   break;
+                case 4: // Affichage spy-matrice
+                    glColor3f(1.0,0.0,0.0);
+                    glfemPlotSolver(gaussSolver,theGeometry->theNodes->nNodes,w,h);
+                  break;
+              
                default:
                    sprintf(theMessage, "Unknown display mode: %d", mode);
                    break;
