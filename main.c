@@ -140,7 +140,7 @@
      int* numbers = malloc(sizeof(int) * theGeometry->theElements->nodes->nNodes);
      theMesh->nodes->number = numbers;
      printf("theMesh : %d\n", theMesh->nLocalNode);
-     femMeshRenumber(theMesh, FEM_YNUM);
+     femMeshRenumber(theMesh, FEM_NO);
      // =========================================================================
      //                        STAGE 3: Domain Naming
      // =========================================================================

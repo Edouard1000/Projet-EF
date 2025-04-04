@@ -288,7 +288,8 @@
  
      for (iElem = 0; iElem < theMesh->nElem; iElem++) {
          for (j=0; j < nLocal; j++) {
-             map[j]  = theMesh->elem[iElem*nLocal+j];
+            int oldId = theMesh->elem[iElem * nLocal + j];
+            map[j] = theMesh->nodes->number[oldId];
              // Vérification noeud valide (important si geoMeshFix a été utilisé)
              if (map[j] < 0 || map[j] >= theNodes->nNodes) {
                   fprintf(stderr, "Error: Invalid node index %d in element %d connectivity.\n", map[j], iElem);
@@ -408,7 +409,7 @@
                   }
               }
          }
- 
+         //printDiagonal(A, theProblem->system->size);
      } // Fin boucle éléments
  }
  
@@ -465,7 +466,8 @@
              // Récupération des coordonnées et mapping des DDL
              bool edgeValid = true;
              for (int j = 0; j < nLocal; j++) {
-                 map[j] = theEdges->elem[iEdgeGlobal * nLocal + j];
+                int oldId = theEdges->elem[iEdgeGlobal * nLocal + j];
+                map[j] = theNodes->number[oldId];
                  if (map[j] == -1) { edgeValid = false; break; } // Noeud supprimé par geoMeshFix
                  if (map[j] < 0 || map[j] >= theNodes->nNodes) { /* ... warning ... */ edgeValid = false; break; }
                  mapU[j] = 2 * map[j] + shift; // Indice global du DDL (Ux/Uy ou Ur/Uz)

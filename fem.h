@@ -179,5 +179,5 @@
  double              femSolverGet(femSolver* mySolver, int i, int j);
 
  void                femMeshRenumber(femMesh *theMesh, femRenumType renumType);
-
+ void printDiagonal(double **A, int size);
  #endif
