@@ -30,11 +30,13 @@
  typedef enum {DIRICHLET_X,DIRICHLET_Y,NEUMANN_X,NEUMANN_Y} femBoundaryType;
  typedef enum {PLANAR_STRESS,PLANAR_STRAIN,AXISYM} femElasticCase;
  typedef enum {FEM_FULL,FEM_BAND,FEM_ITER} femSolverType;
+ typedef enum {FEM_NO,FEM_XNUM,FEM_YNUM} femRenumType;
  
  typedef struct {
      int nNodes;
      double *X;
      double *Y;
+     int *number;
  } femNodes;
  
  typedef struct {
@@ -175,5 +177,7 @@
  void                femWarning(char *text, int line, char *file);
  
  double              femSolverGet(femSolver* mySolver, int i, int j);
+
+ void                femMeshRenumber(femMesh *theMesh, femRenumType renumType);
+
  #endif
- 

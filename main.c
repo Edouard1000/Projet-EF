@@ -131,12 +131,16 @@
           exit(EXIT_FAILURE);
      }
      printf("  Mesh imported and fixed. Nodes: %d, Elements: %d, Edges: %d, Domains: %d\n",
-             theGeometry->theNodes->nNodes,
-             theGeometry->theElements->nElem,
-             (theGeometry->theEdges ? theGeometry->theEdges->nElem : 0),
-             theGeometry->nDomains);
- 
- 
+             theGeometry->theNodes->nNodes, theGeometry->theElements->nElem,
+             (theGeometry->theEdges ? theGeometry->theEdges->nElem : 0), theGeometry->nDomains);
+        
+     printf("nNodes = %d\n",theGeometry->theElements->nodes->nNodes);
+     printf("nElem = %d \n", theGeometry->theElements->nElem);
+     femMesh *theMesh = theGeometry->theElements;
+     int* numbers = malloc(sizeof(int) * theGeometry->theElements->nodes->nNodes);
+     theMesh->nodes->number = numbers;
+     printf("theMesh : %d\n", theMesh->nLocalNode);
+     femMeshRenumber(theMesh, FEM_YNUM);
      // =========================================================================
      //                        STAGE 3: Domain Naming
      // =========================================================================
@@ -410,11 +414,16 @@
      //                 STAGE 7: Solve the FEM Problem
      // =========================================================================
      printf("STAGE 7: Assembling and Solving the Linear System...\n");
+      
+     femSolver *mySolver = malloc(sizeof(femSolver));
+     femSolverType solverType = FEM_FULL;
+     switch (solverType) {
+        case FEM_FULL :
+            mySolver->type = FEM_FULL;
+            mySolver->solver = theProblem->system;
+            break;
+        default : Error("Unexpected solver option"); }
      
-     femSolver *gaussSolver = malloc(sizeof(femSolver));
-     gaussSolver->type = FEM_FULL;
-     gaussSolver->solver = theProblem->system;
-
      double *theSoluce = femElasticitySolve(theProblem);
      if (!theSoluce) { // Vérifier si la solution a échoué (e.g. pivot nul dans l'élimination)
          fprintf(stderr, "Error: FEM solver failed (femElasticitySolve returned NULL). Check BCs (rigid body motion?) or matrix assembly.\n");
@@ -648,7 +657,7 @@
                      break;
                  case 4: // Affichage spy-matrice
                      glColor3f(1.0,0.0,0.0);
-                     glfemPlotSolver(gaussSolver,theGeometry->theNodes->nNodes,w,h);
+                     glfemPlotSolver(mySolver,theGeometry->theNodes->nNodes,w,h);
                    break;
                  default:
                       sprintf(theMessage, "Unknown display mode: %d", mode);
@@ -698,6 +707,9 @@
      // Libérer les structures du problème EF (inclut système, solution, résidus, etc.)
      femElasticityFree(theProblem); theProblem = NULL;
  
+     if (mySolver) { // Vérifier s'il n'a pas déjà été libéré (ne devrait pas arriver ici)
+         free(mySolver); mySolver = NULL;
+     }
      // Libérer la géométrie/maillage et finaliser Gmsh
      geoFinalize();
  

@@ -179,7 +179,59 @@
   //        Section 2: Elasticity Problem Assembly and Solution
   // =========================================================================
   
-  // Variables globales pour stocker une copie de A et B avant application des C.L. Dirichlet.
+ 
+ double *GLOBALARRAY;
+
+ int compare(const void *a, const void *b) {
+     int i = *(int *)a;
+     int j = *(int *)b;
+     if (GLOBALARRAY[i] < GLOBALARRAY[j]) return -1;
+     if (GLOBALARRAY[i] > GLOBALARRAY[j]) return 1;
+     return 0;
+ }
+ 
+ void femMeshRenumber(femMesh *theMesh, femRenumType renumType)
+ {
+    printf("TEST\n");
+     int i; int nNodes = theMesh->nodes->nNodes;
+     int *mapping = malloc(sizeof(int) * nNodes);
+     for (i = 0; i < nNodes; i++) 
+         mapping[i] = i;
+ 
+     
+ 
+     switch (renumType) {
+         case FEM_NO :
+             for (i = 0; i < nNodes; i++) 
+                 theMesh->nodes->number[i] = i;
+             break;
+ 
+         case FEM_XNUM :
+             printf("before\n");
+             GLOBALARRAY = theMesh->nodes->X;
+             printf("after\n");
+             qsort(mapping, nNodes, sizeof(int), compare); 
+             printf("qsort\n");
+             for (i = 0; i < nNodes; i++) 
+                 theMesh->nodes->number[mapping[i]] = i;
+             break;
+ 
+         case FEM_YNUM : 
+             GLOBALARRAY = theMesh->nodes->Y;
+             qsort(mapping, nNodes, sizeof(int), compare);
+             for (i = 0; i < nNodes; i++) 
+                 theMesh->nodes->number[mapping[i]] = i;
+             break;            
+ 
+         default : Error("Unexpected renumbering option"); }
+         printf("end fct\n");
+         free(mapping);
+         
+ }
+
+
+
+ // Variables globales pour stocker une copie de A et B avant application des C.L. Dirichlet.
   // Nécessaires pour le calcul correct des forces résiduelles F_res = A*U - B.
   // Initialisées et libérées dans femElasticitySolve/Forces.
   static double **A_copy = NULL;
